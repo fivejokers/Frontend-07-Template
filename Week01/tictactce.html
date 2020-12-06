@@ -1,0 +1,139 @@
+<style>
+    .cell {
+        width: 100px;
+        height: 100px;
+        background-color: aquamarine;
+        text-align: center;
+        line-height: 100px;
+        display: inline-block;
+        margin: 2px;
+        overflow: hidden;
+        font-size: 30px;
+    }
+</style>
+
+<div id="box"></div>
+
+<script>
+    let list = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+    let user = 1
+    function created() {
+        let box = document.getElementById('box')
+        box.innerHTML = ''
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                let cell = document.createElement('div')
+                cell.classList.add('cell')
+                cell.innerText = list[i * 3 + j] == 1 ? '⭕️' : list[i * 3 + j] == 2 ? '❌' : ''
+                cell.addEventListener('click', () => add(i, j))
+                box.appendChild(cell)
+            }
+            box.appendChild(document.createElement('br'))
+        }
+    }
+
+    function add(i, j) {
+        list[i * 3 + j] = user
+        if (check(list, user)) alert(user == 1 ? '⭕️ is winner' : '❌ is winner')
+        console.log(willwin(list, user))
+        user = 3 - user
+        created()
+        computedMove()
+    }
+
+    function check(list, user) {
+        for (let i = 0; i < 3; i++) {
+            let win = true
+            for (let j = 0; j < 3; j++) {
+                if (list[i * 3 + j] != user) win = false
+            }
+            if (win) return true
+        }
+
+        for (let i = 0; i < 3; i++) {
+            let win = true
+            for (let j = 0; j < 3; j++) {
+                if (list[j * 3 + i] != user) {
+                    win = false
+                }
+            }
+            if (win) return true
+        }
+
+        {
+            let win = true
+            for (let i = 0; i < 3; i++) {
+                list[i * 4]
+                if (list[2 * i + 2] != user) win = false
+            }
+            if (win) return true
+        }
+
+        return false
+    }
+
+    function clone(list) {
+        return Object.create(list)
+    }
+
+    function willwin(list, user) {
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (list[i * 3 + j] > 0) continue
+                let tmp = clone(list)
+                tmp[i * 3 + j] = user
+                if (check(tmp, user)) return [i, j]
+            }
+        }
+        return null
+    }
+
+    // -1输 0和 1赢 
+    function bestChoice(list, user) {
+        let p;
+        if (p = willwin(list, user)) {
+            return {
+                point: p,
+                result: 1
+            }
+        }
+        let result = -2
+        let point = null
+        outer: for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                if (list[i * 3 + j] > 0) continue
+
+                let temp = clone(list)
+                temp[i * 3 + j] = user;
+                let r = bestChoice(temp, 3 - user).result
+                if (-r > result) {
+                    result = -r
+                    point = [i, j]
+                }
+                if (result === 1) {
+                    break outer
+                }
+            }
+        }
+        return {
+            point,
+            result: point ? result : 0
+        }
+    }
+
+    function computedMove() {
+        let choice = bestChoice(list, user)
+
+        console.log(choice.point)
+        if (choice.point) {
+            list[choice.point[0] * 3 + choice.point[1]] = user
+        }
+        if (check(list, user)) {
+            alert(user == 2 ? '❌ is winner!' : '⭕️ is winner')
+        }
+        user = 3 - user
+        created()
+    }
+
+    created()
+</script>
